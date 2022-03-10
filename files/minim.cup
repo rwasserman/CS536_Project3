@@ -25,7 +25,7 @@ public void syntax_error(Symbol currToken) {
 
 
 /* Terminals (tokens returned by the scanner) */
-terminal                INT;
+terminal                INT; 
 terminal                BOOL;
 terminal                VOID;
 terminal                TRUE;
@@ -46,25 +46,25 @@ terminal                LPAREN;
 terminal                RPAREN;
 terminal                SEMICOLON;
 terminal                COMMA;
-terminal                DOT;
+terminal                DOT; //done
 terminal                WRITE;
 terminal                READ;
 terminal                PLUSPLUS;
 terminal                MINUSMINUS;
-terminal                PLUS;
-terminal                MINUS;
-terminal                TIMES;
-terminal                DIVIDE;
-terminal                NOT;
-terminal                AND;
-terminal                OR;
-terminal                EQUALS;
-terminal                NOTEQUALS;
-terminal                LESS;
-terminal                GREATER;
-terminal                LESSEQ;
-terminal                GREATEREQ;
-terminal                ASSIGN;
+terminal                PLUS; //done
+terminal                MINUS; //done
+terminal                TIMES; //done
+terminal                DIVIDE; //done
+terminal                NOT; //done
+terminal                AND; //done
+terminal                OR; //done
+terminal                EQUALS; //done
+terminal                NOTEQUALS; //done
+terminal                LESS; //done
+terminal                GREATER; //done
+terminal                LESSEQ; //done
+terminal                GREATEREQ; //done
+terminal                ASSIGN; //done
 
 
 /* Nonterminals
@@ -78,9 +78,28 @@ non terminal DeclNode         decl;
 non terminal VarDeclNode      varDecl;
 non terminal TypeNode         type;
 non terminal IdNode           id;
+
+non terminal LinkedList       varDeclList;
  
  
 /* NOTE: Add precedence and associativity declarations here */
+precedence right ASSIGN;
+precedence left OR;
+precedence left AND;
+precedence nonassoc LESS;
+precedence nonassoc GREATER;
+precedence nonassoc LESSEQ;
+precedence nonassoc GREATEREQ;
+precedence nonassoc EQUALS;
+precedence nonassoc NOTEQUALS;
+precedence left PLUS;
+precedence left MINUS;
+precedence left TIMES;
+precedence left DIVIDE;
+precedence left NOT;
+precedence left MINUS; //Should represent the UNARY MINUS. Lets confirm this. 
+
+precedence left DOT; //check precedence before proceeding
 
 
 start with program;
@@ -121,6 +140,15 @@ type            ::= INT
 
 id              ::= ID:i
                 {: RESULT = new IdNode(i.lineNum, i.charNum, i.idVal);
+                :}
+                ;
+
+varDeclList     ::= varDeclList:vl varDecl:v
+                {: vl.addLast(v);
+                   RESULT = vl;
+                :}
+                | /* epsilon */
+                {: RESULT = new LinkedList<VarDeclNode>();
                 :}
                 ;
 				
