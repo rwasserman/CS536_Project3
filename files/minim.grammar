@@ -107,6 +107,7 @@ type            ::= INT
 	
 loc             ::= id
                 | loc DOT id
-	
+	            ;
+                
 id              ::= ID
                 ;

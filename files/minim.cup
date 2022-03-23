@@ -65,6 +65,7 @@ terminal                GREATER; //done
 terminal                LESSEQ; //done
 terminal                GREATEREQ; //done
 terminal                ASSIGN; //done
+terminal                UMINUS; //done
 
 
 /* Nonterminals
@@ -79,25 +80,33 @@ non terminal VarDeclNode      varDecl;
 non terminal TypeNode         type;
 non terminal IdNode           id;
 
-non terminal LinkedList       varDeclList;
- 
+non terminal LinkedList       varDeclList; //good
+non terminal FnDeclNode       fnDecl; //good 
+non terminal FnBodyNode       fnBody; //good
+non terminal StructDeclNode   structDecl;
+non terminal LinkedList       stmtList;
+non terminal StmtNode         stmt;
+non terminal AssignNode       assignExp;
+non terminal ExpNode          exp;
+non terminal ExpNode          term;
+non terminal FormalsListNode  formals;
+non terminal LinkedList       formalsList;
+non terminal FormalDeclNode   formalDecl;
+non terminal LinkedList       structBody;
+non terminal ExpNode          loc;
+non terminal CallExpNode      fnCall;
+non terminal LinkedList       actuaList;
+
+
  
 /* NOTE: Add precedence and associativity declarations here */
 precedence right ASSIGN;
 precedence left OR;
 precedence left AND;
-precedence nonassoc LESS;
-precedence nonassoc GREATER;
-precedence nonassoc LESSEQ;
-precedence nonassoc GREATEREQ;
-precedence nonassoc EQUALS;
-precedence nonassoc NOTEQUALS;
-precedence left PLUS;
-precedence left MINUS;
-precedence left TIMES;
-precedence left DIVIDE;
-precedence left NOT;
-precedence left MINUS; //Should represent the UNARY MINUS. Lets confirm this. 
+precedence nonassoc LESS, GREATER, LESSEQ, GREATEREQ, EQUALS, NOTEQUALS;
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+precedence left UMINUS, NOT; 
 
 precedence left DOT; //check precedence before proceeding
 
@@ -151,4 +160,60 @@ varDeclList     ::= varDeclList:vl varDecl:v
                 {: RESULT = new LinkedList<VarDeclNode>();
                 :}
                 ;
+                
+fnBody          ::= LCURLY varDeclList:vl stmtList:sl RCURLY
+                {: RESULT = new FnBodyNode(new DeclListNode(vl), new StmtListNode(sl));
+                :}
+                ; 
+
+fnDecl          ::= type:t id:i formals:f fnBody:fb
+                {:  RESULT = new FnDeclNode(t, i, f, fb);
+                :}
+                ;
+
+structBody      ::= structBody:sb varDecl:vd
+                {:  sb.addLast(vd);
+                    RESULT = sb;
+                :}
+                |   varDecl:vd
+                {:  RESULT = new LinkedList<DeclNode>();
+                :}
+                ;
 				
+structDecl      ::= STRUCT id:i LCURLY structBody:sb RCURLY SEMICOLON
+                {:  RESULT = new StructDeclNode(i, new DeclListNode(sb));
+                :}
+                ;
+
+formalDecl      ::= type:t id:i
+                {:  RESULT = new FormalDeclNode(t, i);
+                :}
+                ;
+
+formalsList     ::= formalDecl:fd
+                {:  LinkedList<FormalDeclNode> list = new LinkedList<FormalDeclNode>();
+                    list.addLast(fd);
+                    RESULT = list;
+                :}
+                |   formalDecl:fd COMMA formalsList:ls
+                {:  ls.add(fd);
+                    RESULT = ls;
+                :}
+                ;
+
+formals         ::= LPAREN RPAREN
+                {:  RESULT = new FormalsListNode(new LinkedList<FormalDeclNode>());
+                :}
+                |   LPAREN formalsList:fl RPAREN
+                {:  RESULT = new FormalsListNode(fl);
+                :}
+                ;
+
+
+
+
+
+
+
+
+
