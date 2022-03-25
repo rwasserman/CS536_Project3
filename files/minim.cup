@@ -28,8 +28,8 @@ public void syntax_error(Symbol currToken) {
 terminal                INT; 
 terminal                BOOL;
 terminal                VOID;
-terminal                TRUE;
-terminal                FALSE;
+terminal TokenVal       TRUE;
+terminal TokenVal       FALSE;
 terminal                STRUCT;
 terminal                INPUT;
 terminal                DISP;
@@ -83,19 +83,19 @@ non terminal IdNode           id;
 non terminal LinkedList       varDeclList; //good
 non terminal FnDeclNode       fnDecl; //good 
 non terminal FnBodyNode       fnBody; //good
-non terminal StructDeclNode   structDecl;
+non terminal StructDeclNode   structDecl; //good
 non terminal LinkedList       stmtList;
-non terminal StmtNode         stmt;
-non terminal AssignNode       assignExp;
-non terminal ExpNode          exp;
-non terminal ExpNode          term;
-non terminal FormalsListNode  formals;
-non terminal LinkedList       formalsList;
-non terminal FormalDeclNode   formalDecl;
-non terminal LinkedList       structBody;
-non terminal ExpNode          loc;
-non terminal CallExpNode      fnCall;
-non terminal LinkedList       actuaList;
+non terminal StmtNode         stmt; //good
+non terminal AssignExpNode    assignExp; //good
+non terminal ExpNode          exp; //good
+non terminal ExpNode          term; //good
+non terminal FormalsListNode  formals; //good
+non terminal LinkedList       formalsList; //good
+non terminal FormalDeclNode   formalDecl; //good
+non terminal LinkedList       structBody; //good
+non terminal ExpNode          loc; //good
+non terminal CallExpNode      fncall; //good
+non terminal LinkedList       actualList; //good
 
 
  
@@ -133,7 +133,13 @@ declList        ::= declList:dl decl:d
                 ;
 
 decl            ::= varDecl:v
-                {: RESULT = v;
+                {:  RESULT = v;
+                :}
+                |   fnDecl:fd
+                {:  RESULT = fd;
+                :}
+                |   structDecl:sd
+                {:  RESULT = sd;
                 :}
                 ;
 
@@ -144,6 +150,12 @@ varDecl         ::= type:t id:i SEMICOLON
 
 type            ::= INT
                 {: RESULT = new IntNode();
+                :}
+                |   BOOL
+                {:  RESULT = new BoolNode();
+                :}
+                |   VOID
+                {:  RESULT = new VoidNode();
                 :}
                 ;
 
@@ -170,6 +182,11 @@ fnDecl          ::= type:t id:i formals:f fnBody:fb
                 {:  RESULT = new FnDeclNode(t, i, f, fb);
                 :}
                 ;
+                
+structDecl      ::= STRUCT id:i LCURLY structBody:sb RCURLY SEMICOLON
+                {:  RESULT = new StructDeclNode(i, new DeclListNode(sb));
+                :}
+                ;
 
 structBody      ::= structBody:sb varDecl:vd
                 {:  sb.addLast(vd);
@@ -180,10 +197,7 @@ structBody      ::= structBody:sb varDecl:vd
                 :}
                 ;
 				
-structDecl      ::= STRUCT id:i LCURLY structBody:sb RCURLY SEMICOLON
-                {:  RESULT = new StructDeclNode(i, new DeclListNode(sb));
-                :}
-                ;
+
 
 formalDecl      ::= type:t id:i
                 {:  RESULT = new FormalDeclNode(t, i);
@@ -209,8 +223,161 @@ formals         ::= LPAREN RPAREN
                 :}
                 ;
 
+loc             ::= id:i
+                {:  RESULT = i;
+                :}
+                |   loc:l DOT id:i
+                {:  RESULT = new DotAccessExpNode(l,i);
+                :}
+                ;
+
+fncall          ::= id:i LPAREN RPAREN
+                {:  RESULT = new CallExpNode(i);
+                :}
+                |   id:i LPAREN actualList:al RPAREN
+                {:  RESULT = new CallExpNode(i, new ExpListNode(al));
+                :}
+                ;
 
 
+actualList      ::= exp:e
+                {:  LinkedList<ExpNode> list = new LinkedList<ExpNode>();
+                    list.addLast(e);
+                    RESULT = list;
+                :}
+                |   actualList:al COMMA exp:e
+                {:  
+                    al.add(e);
+                    RESULT = al;
+                :}
+                ;
+
+term            ::= loc:l
+                {:  RESULT = l;
+                :}
+                |   INTLITERAL:i
+                {:  RESULT = new IntLitNode(i.lineNum, i.charNum, i.intVal);
+                :}
+                |   STRINGLITERAL:s
+                {:  RESULT = new StringLitNode(s.lineNum, s.charNum, s.strVal);
+                :}
+                |   TRUE:t
+                {:  RESULT = new TrueNode(t.lineNum, t.charNum);
+                :}
+                |   FALSE:f
+                {:  RESULT = new FalseNode(f.lineNum, f.charNum);
+                :}
+                |   LPAREN exp:e RPAREN
+                {:  RESULT = e;
+                :}
+                |   fncall:fn
+                {:  RESULT = fn;
+                :}
+                ;
+
+exp             ::= assignExp:aezzz
+                {:  RESULT = aezzz;
+                :}
+                |   exp:a PLUS exp:b
+                {:  RESULT = new PlusNode(a, b);
+                :}
+                |   exp:a MINUS exp:b
+                {:  RESULT = new MinusNode(a, b);
+                :}
+                |   exp:a TIMES exp:b
+                {:  RESULT = new TimesNode(a, b);
+                :}
+                |   exp:a DIVIDE exp:b
+                {:  RESULT = new DivideNode(a, b);
+                :}
+                |   NOT exp:a  
+                {:  RESULT = new NotNode(a);
+                :}
+                |   exp:a AND exp:b
+                {:  RESULT = new AndNode(a, b);
+                :}
+                |   exp:a OR exp:b
+                {:  RESULT = new OrNode(a, b);
+                :}
+                |   exp:a EQUALS exp:b
+                {:  RESULT = new EqualsNode(a, b);
+                :}
+                |   exp:a NOTEQUALS exp:b
+                {:  RESULT = new NotEqualsNode(a, b);
+                :}
+                |   exp:a LESS exp:b
+                {:  RESULT = new LessNode(a, b);
+                :}
+                |   exp:a GREATER exp:b
+                {:  RESULT = new GreaterNode(a,b);
+                :}
+                |   exp:a LESSEQ exp:b
+                {:  RESULT = new LessEqNode(a, b);
+                :}
+                |   exp:a GREATEREQ exp:b
+                {:  RESULT = new GreaterEqNode(a, b);
+                :}
+                |   MINUS term:t
+                {:  RESULT = new UnaryMinusNode(t);
+                :}
+                |   term:t
+                {:  RESULT = t;
+                :}
+                ;
+                
+assignExp       ::= loc:l ASSIGN exp:e
+                {:  RESULT = new AssignExpNode(l, e);
+                :}
+                ;
+
+stmtList        ::= stmtList:sl stmt:s
+                {:  sl.addLast(s);
+                    RESULT = sl;
+                :}
+                |   /* epsilon */ 
+                {:  RESULT = new LinkedList<StmtNode>();
+                :}
+                ;
+
+stmt            ::= assignExp:aex SEMICOLON
+                {:  RESULT = new AssignStmtNode(aex);
+                :}
+                |   loc:l PLUSPLUS SEMICOLON
+                {:  RESULT = new PostIncStmtNode(l);
+                :}
+                |   loc:l MINUSMINUS SEMICOLON
+                {:  RESULT = new PostDecStmtNode(l);
+                :}
+                |   INPUT READ loc:l SEMICOLON
+                {:  RESULT = new ReadStmtNode(l);
+                :}
+                |   DISP WRITE exp:e SEMICOLON
+                {:  RESULT = new WriteStmtNode(e);
+                :}
+                |   IF exp:e LCURLY varDeclList:vdl stmtList:sl  RCURLY
+                {:  RESULT = new IfStmtNode(e, new DeclListNode(vdl), new StmtListNode(sl));
+                :}
+                |   IF exp:e LCURLY varDeclList:ifvdl stmtList:ifsl RCURLY ELSE LCURLY varDeclList:elsevdl stmtList:elsesl RCURLY
+                {:  DeclListNode ifVDNode = new DeclListNode(ifvdl);
+                    StmtListNode ifStmtListNode = new StmtListNode(ifsl);
+                    DeclListNode elseVDNode = new DeclListNode(elsevdl);
+                    StmtListNode elseStmtListNode = new StmtListNode(elsesl);
+                    RESULT = new IfElseStmtNode(e, ifVDNode, ifStmtListNode, elseVDNode, elseStmtListNode);
+                :}
+                |   WHILE exp:e LCURLY varDeclList:vdl stmtList:sl RCURLY
+                {:  WhileStmtNode wsNode = new WhileStmtNode(e, new DeclListNode(vdl), new StmtListNode(sl));
+                    RESULT = wsNode;
+                :}
+                |   RETURN exp:e SEMICOLON
+                {:  RESULT = new ReturnStmtNode(e);
+                :}
+                |   RETURN SEMICOLON
+                {:  RESULT = new ReturnStmtNode(null);
+                :}
+                |   fncall:fn SEMICOLON
+                {:  RESULT = new CallStmtNode(fn);
+                :}
+                ;
 
 
 

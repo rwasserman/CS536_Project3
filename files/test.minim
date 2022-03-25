@@ -1,2 +1,8 @@
 int x;
 int y;
+int z;
+bool g;
+void v;
+struct testStruct {
+    int testInt;
+};
