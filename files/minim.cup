@@ -127,8 +127,8 @@ declList        ::= declList:dl decl:d
                 {: dl.addLast(d);
                    RESULT = dl;
                 :}
-                | /* epsilon */
-                {: RESULT = new LinkedList<DeclNode>();
+                |   /* epsilon */
+                {:  RESULT = new LinkedList<DeclNode>();
                 :}
                 ;
 
@@ -144,7 +144,10 @@ decl            ::= varDecl:v
                 ;
 
 varDecl         ::= type:t id:i SEMICOLON
-                {: RESULT = new VarDeclNode(t, i, VarDeclNode.NOT_STRUCT);
+                {:  RESULT = new VarDeclNode(t, i, VarDeclNode.NOT_STRUCT);
+                :}
+                |   STRUCT id:idone id:idtwo SEMICOLON
+                {:  RESULT = new VarDeclNode( new StructNode(idone), idtwo, 0); 
                 :}
                 ;
 
@@ -169,7 +172,7 @@ varDeclList     ::= varDeclList:vl varDecl:v
                    RESULT = vl;
                 :}
                 | /* epsilon */
-                {: RESULT = new LinkedList<VarDeclNode>();
+                {: RESULT = new LinkedList<DeclNode>();
                 :}
                 ;
                 
@@ -193,11 +196,13 @@ structBody      ::= structBody:sb varDecl:vd
                     RESULT = sb;
                 :}
                 |   varDecl:vd
-                {:  RESULT = new LinkedList<DeclNode>();
+                {:  LinkedList<DeclNode> list = new LinkedList<DeclNode>();
+                    list.addLast(vd);
+                    RESULT = list;
+                    
                 :}
                 ;
 				
-
 
 formalDecl      ::= type:t id:i
                 {:  RESULT = new FormalDeclNode(t, i);
@@ -246,8 +251,7 @@ actualList      ::= exp:e
                     RESULT = list;
                 :}
                 |   actualList:al COMMA exp:e
-                {:  
-                    al.add(e);
+                {:  al.add(e);
                     RESULT = al;
                 :}
                 ;
@@ -339,8 +343,8 @@ stmtList        ::= stmtList:sl stmt:s
                 :}
                 ;
 
-stmt            ::= assignExp:aex SEMICOLON
-                {:  RESULT = new AssignStmtNode(aex);
+stmt            ::= assignExp:ae SEMICOLON
+                {:  RESULT = new AssignStmtNode(ae);
                 :}
                 |   loc:l PLUSPLUS SEMICOLON
                 {:  RESULT = new PostIncStmtNode(l);
@@ -354,7 +358,7 @@ stmt            ::= assignExp:aex SEMICOLON
                 |   DISP WRITE exp:e SEMICOLON
                 {:  RESULT = new WriteStmtNode(e);
                 :}
-                |   IF exp:e LCURLY varDeclList:vdl stmtList:sl  RCURLY
+                |   IF exp:e LCURLY varDeclList:vdl stmtList:sl RCURLY
                 {:  RESULT = new IfStmtNode(e, new DeclListNode(vdl), new StmtListNode(sl));
                 :}
                 |   IF exp:e LCURLY varDeclList:ifvdl stmtList:ifsl RCURLY ELSE LCURLY varDeclList:elsevdl stmtList:elsesl RCURLY

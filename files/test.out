@@ -3,4 +3,20 @@ int y;
 int z;
 bool g;
 void v;
-struct testStruct{ };
+struct testStruct { 
+    int testInt;
+};
+int main () {
+    if (true) {
+        int testG;
+        if (true) {
+            void voidGas;
+}
+        }
+    while (true) {
+        bool whileBool;
+        if (true) {
+            void voidGas;
+}
+            }
+}
